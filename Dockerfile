@@ -12,7 +12,7 @@ RUN npm run compile
 # Lean production image that just contains the dist directory and runtime dependencies
 FROM base as prod
 RUN npm ci --only=production
-COPY --from=builder /usr/src/opentitles/dist ./dist
+COPY --from=builder /usr/src/opentitles/dist .
 ENV NODE_ENV=production
 EXPOSE 8083 8083
 CMD ["npm", "start"]
