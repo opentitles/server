@@ -1,9 +1,13 @@
-FROM node:10-alpine AS base
+FROM node:12-alpine AS base
 WORKDIR /usr/src/opentitles
 COPY package*.json ./
 
+# Get the latest definition file from GitHub
+FROM alpine/git:latest AS definition
+WORKDIR /usr/src/opentitles
+RUN git clone https://github.com/opentitles/definition.git defs
+
 # Builder image used only for compiling Typescript files
-# Should also run unit tests and linting in the future
 FROM base as builder
 RUN npm ci
 COPY . .
@@ -13,6 +17,6 @@ RUN npm run compile
 FROM base as prod
 RUN npm ci --only=production
 COPY --from=builder /usr/src/opentitles/dist .
-ENV NODE_ENV=production
+COPY --from=definition /usr/src/opentitles/defs/media.json .
 EXPOSE 8083 8083
 CMD ["npm", "start"]

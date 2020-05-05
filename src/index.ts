@@ -14,6 +14,11 @@ let dbo: Db;
 
 const init = (): Promise<void> => {
   return new Promise((resolve, reject) => {
+    if (!CONFIG.MONGO_URL) {
+      reject('MONGO_URL was not defined');
+      return;
+    }
+
     /**
      * Connect once and use the dbo reference in every call from here on out
      */
@@ -33,7 +38,7 @@ const init = (): Promise<void> => {
   });
 }
 
-app.get('/opentitles/article/:org/:id', function(req, res) {
+app.get(['/opentitles/article/:org/:id', '/article/:org/:id'], function(req, res) {
   const artid = decodeURIComponent(req.params.id);
   const artorg = decodeURIComponent(req.params.org);
 
@@ -58,7 +63,7 @@ app.get('/opentitles/article/:org/:id', function(req, res) {
   });
 });
 
-app.post('/opentitles/suggest', function(req, res) {
+app.post(['/opentitles/suggest', '/suggest'], function(req, res) {
   res.end();
 
   let bod = req.body;
@@ -94,7 +99,7 @@ app.post('/opentitles/suggest', function(req, res) {
   });
 });
 
-app.get('/opentitles/suggest', function(req, res) {
+app.get(['/opentitles/suggest', '/suggest'], function(req, res) {
   dbo.collection('suggestions').find({}).toArray(function(err, suggestions) {
     if (err) {
       clog(err);
