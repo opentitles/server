@@ -7,7 +7,7 @@ if (!isProd) {
 }
 
 export const {
-  MONGO_URL = 'mongodb://10.10.10.15:27017/opentitles',
+  MONGO_URL,
   PORT = 8083,
   LOG_OUT = true
 } = process.env;
