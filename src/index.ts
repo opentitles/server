@@ -5,8 +5,14 @@ import { MongoClient, Db } from 'mongodb';
 import * as CONFIG from './config';
 import { articleIdIsValid } from './util/article';
 import { clog } from './util/logging';
+import * as Sentry from '@sentry/node';
+
+if (process.env.DSN) {
+  Sentry.init({ dsn: process.env.DSN });
+}
 
 const app = express();
+app.use(Sentry.Handlers.requestHandler());
 app.use(express.json());
 app.use(cors({credentials: true, origin: true}));
 
@@ -111,6 +117,8 @@ app.get(['/opentitles/suggest', '/suggest'], function(req, res) {
   });
 });
 
+app.use(Sentry.Handlers.errorHandler());
+
 init()
   .then(() => {
     app.listen(CONFIG.PORT, () => {
@@ -119,5 +127,6 @@ init()
   })
   .catch((error) => {
     clog(`OpenTitles API Server failed to start: ${error}`);
+    Sentry.captureException(error);
     process.exit(1);
   });
