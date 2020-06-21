@@ -121,8 +121,8 @@ app.use(Sentry.Handlers.errorHandler());
 
 init()
   .then(() => {
-    app.listen(CONFIG.PORT, () => {
-      clog(`OpenTitles API Server is running on port ${CONFIG.PORT}`)
+    app.listen(process.env.PORT || CONFIG.PORT, () => {
+      clog(`OpenTitles API Server is running on port ${process.env.PORT || CONFIG.PORT}`)
     });
   })
   .catch((error) => {
