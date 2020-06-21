@@ -18,5 +18,4 @@ FROM base as prod
 RUN npm ci --only=production
 COPY --from=builder /usr/src/opentitles/dist .
 COPY --from=definition /usr/src/opentitles/defs/media.json .
-EXPOSE 8083 8083
 CMD ["npm", "start"]
