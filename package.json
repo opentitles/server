@@ -10,13 +10,13 @@
   "author": "Floris de Bijl",
   "license": "AGPL-3.0",
   "dependencies": {
-    "@sentry/node": "5.22.3",
+    "@sentry/node": "5.23.0",
     "@types/moment": "2.13.0",
     "cors": "2.8.5",
     "dotenv": "8.2.0",
     "express": "4.17.1",
-    "moment": "2.27.0",
-    "mongodb": "3.6.1"
+    "moment": "2.28.0",
+    "mongodb": "3.6.2"
   },
   "devDependencies": {
     "@types/cors": "2.8.7",
