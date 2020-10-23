@@ -2,19 +2,26 @@ import moment from 'moment';
 import express from 'express';
 import cors from 'cors';
 import { MongoClient, Db } from 'mongodb';
+import * as Sentry from '@sentry/node';
+import { Clog, LOGLEVEL } from '@fdebijl/clog';
+
 import * as CONFIG from './config';
 import { articleIdIsValid } from './util/article';
-import { clog } from './util/logging';
-import * as Sentry from '@sentry/node';
 
 if (process.env.DSN) {
   Sentry.init({ dsn: process.env.DSN });
 }
 
+const clog = new Clog();
+
 const app = express();
 app.use(Sentry.Handlers.requestHandler());
 app.use(express.json());
 app.use(cors({credentials: true, origin: true}));
+
+if (!fs.existsSync('media.json')) {
+  throw new Error('Media.json could not be found in the scraper directory.');
+} const mediaConfig = JSON.parse(fs.readFileSync('media.json', 'utf8')) as MediaDefinition;
 
 let dbo: Db;
 
@@ -44,9 +51,91 @@ const init = (): Promise<void> => {
   });
 }
 
-app.get(['/opentitles/article/:org/:id', '/article/:org/:id'], function(req, res) {
-  const artid = decodeURIComponent(req.params.id);
+/**
+ * Get all countries that have media organizations tracked by OpenTitles
+ * @since v2
+ * @method GET
+ */
+app.get(`v${CONFIG.REV}/country`, function(req, res) {
+  res.json(Object.keys(mediaConfig.feeds));
+});
+
+/**
+ * Get all media organizations in a single country
+ * @since v2
+ * @method GET
+ */
+app.get(`v${CONFIG.REV}/country/:int/org`, function(req, res) {
+  const artint = req.params.int;
+
+  if (!mediaConfig.feeds[artint]) {
+    res.status(404).json({
+      error: 'No such country',
+      lookat: '/country'
+    })
+  } else {
+    res.json(mediaConfig.feeds[artint].map(org => org.name));
+  }
+});
+
+/**
+ * Get the definition for a single medium in a given country
+ * @since v2
+ * @method GET
+ */
+app.get(`v${CONFIG.REV}/country/:int/org/:org`, function(req, res) {
+  const artint = req.params.int;
   const artorg = decodeURIComponent(req.params.org);
+
+  if (!mediaConfig.feeds[artint]) {
+    res.status(404).json({
+      error: 'No such country',
+      lookat: '/country'
+    })
+  } else {
+    const org = mediaConfig.feeds[artint].find(org => org.name == artorg);
+
+    if (!org) {
+      res.status(404).json({
+        error: 'No such organization',
+        lookat: `/country/${artint}/org`
+      });
+    } else {
+      res.json(org);
+    }
+  }
+});
+
+/**
+ * Get a list of the 20 most recent articles for a given organization
+ * TODO: Pagination
+ *
+ * @since v2
+ * @method GET
+*/
+app.get(`v${CONFIG.REV}/country/:int/org/:org/article`, async (req, res) => {
+  const artint = req.params.int;
+  const artorg = decodeURIComponent(req.params.org);
+
+  const find = {
+    lang: artint,
+    org: artorg
+  }
+
+  try {
+    const articles = await dbo.collection('articles').find(find).sort({_id: -1}).limit(20).toArray();
+    res.json(articles);
+  } catch (e) {
+    res.status(500).json({
+      error: 'Error occured while searching for articles for org'
+    })
+  }
+});
+
+app.get(`v${CONFIG.REV}/country/:int/org/:org/article/:id`, function(req, res) {
+  const artint = req.params.int;
+  const artorg = decodeURIComponent(req.params.org);
+  const artid = decodeURIComponent(req.params.id);
 
   if (!artid || !artorg || !articleIdIsValid(artid)) {
     res.sendStatus(400);
@@ -54,18 +143,18 @@ app.get(['/opentitles/article/:org/:id', '/article/:org/:id'], function(req, res
   }
 
   const find = {
+    lang: artint,
     org: artorg,
     articleID: artid,
   };
 
   dbo.collection('articles').findOne(find, function(err, article) {
     if (err) {
-      clog(err);
+      clog.log(err as unknown as string, LOGLEVEL.ERROR);
       return;
     }
 
-    res.setHeader('Content-Type', 'application/json');
-    res.send(JSON.stringify(article, null, 4));
+    res.json(article);
   });
 });
 
@@ -105,10 +194,10 @@ app.post(['/opentitles/suggest', '/suggest'], function(req, res) {
   });
 });
 
-app.get(['/opentitles/suggest', '/suggest'], function(req, res) {
+app.get('/suggestions', function(req, res) {
   dbo.collection('suggestions').find({}).toArray(function(err, suggestions) {
     if (err) {
-      clog(err);
+      clog.log(err);
       return;
     }
 

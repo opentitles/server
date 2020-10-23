@@ -18,4 +18,8 @@ FROM base as prod
 RUN npm ci --only=production
 COPY --from=builder /usr/src/opentitles/dist .
 COPY --from=definition /usr/src/opentitles/defs/media.json .
+COPY healthcheck.js .
 CMD ["npm", "start"]
+
+HEALTHCHECK --interval=30s --timeout=15s --start-period=60s \  
+ CMD node healthcheck.js
