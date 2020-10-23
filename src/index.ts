@@ -1,5 +1,6 @@
 import moment from 'moment';
 import express from 'express';
+import fs from 'fs';
 import cors from 'cors';
 import { MongoClient, Db } from 'mongodb';
 import * as Sentry from '@sentry/node';
@@ -20,7 +21,7 @@ app.use(express.json());
 app.use(cors({credentials: true, origin: true}));
 
 if (!fs.existsSync('media.json')) {
-  throw new Error('Media.json could not be found in the scraper directory.');
+  throw new Error('Media.json could not be found in the server directory.');
 } const mediaConfig = JSON.parse(fs.readFileSync('media.json', 'utf8')) as MediaDefinition;
 
 let dbo: Db;
@@ -56,22 +57,23 @@ const init = (): Promise<void> => {
  * @since v2
  * @method GET
  */
-app.get(`v${CONFIG.REV}/country`, function(req, res) {
+app.get(`/v${CONFIG.REV}/country`, function(req, res) {
   res.json(Object.keys(mediaConfig.feeds));
 });
 
 /**
  * Get all media organizations in a single country
+ *
  * @since v2
  * @method GET
  */
-app.get(`v${CONFIG.REV}/country/:int/org`, function(req, res) {
+app.get(`/v${CONFIG.REV}/country/:int/org`, function(req, res) {
   const artint = req.params.int;
 
   if (!mediaConfig.feeds[artint]) {
     res.status(404).json({
       error: 'No such country',
-      lookat: '/country'
+      lookat: `/v${CONFIG.REV}/country`
     })
   } else {
     res.json(mediaConfig.feeds[artint].map(org => org.name));
@@ -80,17 +82,18 @@ app.get(`v${CONFIG.REV}/country/:int/org`, function(req, res) {
 
 /**
  * Get the definition for a single medium in a given country
+ *
  * @since v2
  * @method GET
  */
-app.get(`v${CONFIG.REV}/country/:int/org/:org`, function(req, res) {
+app.get(`/v${CONFIG.REV}/country/:int/org/:org`, function(req, res) {
   const artint = req.params.int;
   const artorg = decodeURIComponent(req.params.org);
 
   if (!mediaConfig.feeds[artint]) {
     res.status(404).json({
       error: 'No such country',
-      lookat: '/country'
+      lookat: `/v${CONFIG.REV}/country`
     })
   } else {
     const org = mediaConfig.feeds[artint].find(org => org.name == artorg);
@@ -98,7 +101,7 @@ app.get(`v${CONFIG.REV}/country/:int/org/:org`, function(req, res) {
     if (!org) {
       res.status(404).json({
         error: 'No such organization',
-        lookat: `/country/${artint}/org`
+        lookat: `/v${CONFIG.REV}/country/${artint}/org`
       });
     } else {
       res.json(org);
@@ -113,7 +116,7 @@ app.get(`v${CONFIG.REV}/country/:int/org/:org`, function(req, res) {
  * @since v2
  * @method GET
 */
-app.get(`v${CONFIG.REV}/country/:int/org/:org/article`, async (req, res) => {
+app.get(`/v${CONFIG.REV}/country/:int/org/:org/article`, async (req, res) => {
   const artint = req.params.int;
   const artorg = decodeURIComponent(req.params.org);
 
@@ -124,6 +127,21 @@ app.get(`v${CONFIG.REV}/country/:int/org/:org/article`, async (req, res) => {
 
   try {
     const articles = await dbo.collection('articles').find(find).sort({_id: -1}).limit(20).toArray();
+
+    if (!articles) {
+      res.status(404).json({
+        error: 'No articles found for the the given org'
+      });
+      return;
+    }
+
+    if (articles.length === 0) {
+      res.status(404).json({
+        error: 'No articles found for the the given org'
+      });
+      return;
+    }
+
     res.json(articles);
   } catch (e) {
     res.status(500).json({
@@ -132,7 +150,13 @@ app.get(`v${CONFIG.REV}/country/:int/org/:org/article`, async (req, res) => {
   }
 });
 
-app.get(`v${CONFIG.REV}/country/:int/org/:org/article/:id`, function(req, res) {
+/**
+ * Get a single article for a single medium in a single country
+ *
+ * @since v2
+ * @method GET
+ */
+app.get(`/v${CONFIG.REV}/country/:int/org/:org/article/:id`, function(req, res) {
   const artint = req.params.int;
   const artorg = decodeURIComponent(req.params.org);
   const artid = decodeURIComponent(req.params.id);
@@ -158,7 +182,7 @@ app.get(`v${CONFIG.REV}/country/:int/org/:org/article/:id`, function(req, res) {
   });
 });
 
-app.post(['/opentitles/suggest', '/suggest'], function(req, res) {
+app.post(`/v${CONFIG.REV}/suggest`, function(req, res) {
   res.end();
 
   let bod = req.body;
@@ -176,7 +200,7 @@ app.post(['/opentitles/suggest', '/suggest'], function(req, res) {
 
   dbo.collection('suggestions').findOne(find, function(err, suggestion) {
     if (err) {
-      clog(err);
+      clog.log(err as unknown as string);
       return;
     }
 
@@ -194,10 +218,10 @@ app.post(['/opentitles/suggest', '/suggest'], function(req, res) {
   });
 });
 
-app.get('/suggestions', function(req, res) {
+app.get(`/v${CONFIG.REV}/suggest`, function(req, res) {
   dbo.collection('suggestions').find({}).toArray(function(err, suggestions) {
     if (err) {
-      clog.log(err);
+      clog.log(err as unknown as string);
       return;
     }
 
@@ -211,11 +235,11 @@ app.use(Sentry.Handlers.errorHandler());
 init()
   .then(() => {
     app.listen(process.env.PORT || CONFIG.PORT, () => {
-      clog(`OpenTitles API Server is running on port ${process.env.PORT || CONFIG.PORT}`)
+      clog.log(`OpenTitles API Server is running on port ${process.env.PORT || CONFIG.PORT} with revision ${CONFIG.REV}`)
     });
   })
   .catch((error) => {
-    clog(`OpenTitles API Server failed to start: ${error}`);
+    clog.log(`OpenTitles API Server failed to start: ${error}`, LOGLEVEL.FATAL);
     Sentry.captureException(error);
     process.exit(1);
   });
