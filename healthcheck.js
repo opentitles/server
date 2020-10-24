@@ -3,8 +3,8 @@ const http = require('http');
 
 const options = {
   host: 'localhost',
-  port: process.env.PORT || 8081,
-  path: '/cachedview/liveversion/example.com',
+  port: process.env.PORT || 8059,
+  path: '/v2/country/nl/org/NOS/article/2353584',
   timeout: 2000
 };
 
