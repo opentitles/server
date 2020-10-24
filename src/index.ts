@@ -4,14 +4,11 @@ import fs from 'fs';
 import cors from 'cors';
 import { MongoClient, Db } from 'mongodb';
 import * as Sentry from '@sentry/node';
+import * as Tracing from "@sentry/tracing";
 import { Clog, LOGLEVEL } from '@fdebijl/clog';
 
 import * as CONFIG from './config';
 import { articleIdIsValid } from './util/article';
-
-if (process.env.DSN) {
-  Sentry.init({ dsn: process.env.DSN });
-}
 
 const clog = new Clog();
 
@@ -19,6 +16,16 @@ const app = express();
 app.use(Sentry.Handlers.requestHandler());
 app.use(express.json());
 app.use(cors({credentials: true, origin: true}));
+
+if (process.env.DSN) {
+  Sentry.init({
+    dsn: process.env.DSN,
+    integrations: [
+      new Sentry.Integrations.Http({ tracing: true }),
+      new Tracing.Integrations.Express({ app })
+    ]
+  });
+}
 
 if (!fs.existsSync('media.json')) {
   throw new Error('Media.json could not be found in the server directory.');
