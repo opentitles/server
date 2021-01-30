@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "compile": "tsc"
+    "compile": "tsc",
+    "build": "npm run compile",
+    "lint": "eslint \"./src/**/*.ts\" --max-warnings 2"
   },
   "author": "Floris de Bijl",
   "license": "AGPL-3.0",
