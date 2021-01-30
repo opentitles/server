@@ -8,6 +8,6 @@ if (!isProd) {
 
 export const {
   MONGO_URL,
-  PORT = 8083,
-  LOG_OUT = true
+  PORT = 8059,
+  REV = '2'
 } = process.env;
