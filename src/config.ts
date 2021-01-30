@@ -9,5 +9,6 @@ if (!isProd) {
 export const {
   MONGO_URL,
   PORT = 8059,
-  REV = '2'
+  REV = '2',
+  EXPECTED_TELEMETRY_AUTH
 } = process.env;
