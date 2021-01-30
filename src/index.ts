@@ -1,5 +1,6 @@
 import moment from 'moment';
 import express from 'express';
+import prometheus from 'express-prometheus-middleware';
 import fs from 'fs';
 import cors from 'cors';
 import { MongoClient, Db } from 'mongodb';
@@ -25,6 +26,14 @@ if (process.env.DSN) {
       new Tracing.Integrations.Express({ app })
     ]
   });
+}
+
+if (CONFIG.EXPECTED_TELEMETRY_AUTH) {
+  app.use(prometheus({
+    metricsPath: `/v${CONFIG.REV}/metrics`,
+    collectDefaultMetrics: true,
+    authenticate: req => req.headers.authorization === `Basic ${CONFIG.EXPECTED_TELEMETRY_AUTH}`
+  }))
 }
 
 if (!fs.existsSync('media.json')) {
