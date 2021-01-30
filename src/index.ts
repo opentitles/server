@@ -31,7 +31,8 @@ if (process.env.DSN) {
 if (CONFIG.EXPECTED_TELEMETRY_AUTH) {
   app.use(prometheus({
     metricsPath: `/v${CONFIG.REV}/metrics`,
-    collectDefaultMetrics: true
+    collectDefaultMetrics: true,
+    authenticate: req => req.headers.authorization === `Basic ${CONFIG.EXPECTED_TELEMETRY_AUTH}`
   }))
 }
 
