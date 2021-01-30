@@ -118,7 +118,7 @@ app.get(`/v${CONFIG.REV}/country/:int/org/:org`, function(req, res) {
 
 /**
  * Get a list of the 20 most recent articles for a given organization
- * TODO: Pagination
+ * TODO: Pagination via HATEOAS
  *
  * @since v2
  * @method GET
@@ -202,7 +202,7 @@ app.post(`/v${CONFIG.REV}/suggest`, function(req, res) {
   }
 
   const find = {
-    url: bod.url,
+    url: `${bod.url}`,
   };
 
   dbo.collection('suggestions').findOne(find, function(err, suggestion) {
@@ -213,7 +213,7 @@ app.post(`/v${CONFIG.REV}/suggest`, function(req, res) {
 
     if (!suggestion) {
       const newentry = {
-        url: bod.url,
+        url: `${bod.url}`,
         rss_present: bod.hasrss,
         rss_overview: bod.rss_overview,
         has_id: bod.has_id,
