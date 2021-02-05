@@ -1,6 +1,7 @@
 import moment from 'moment';
 import express from 'express';
 import prometheus from 'express-prometheus-middleware';
+import promclient from 'prom-client';
 import fs from 'fs';
 import cors from 'cors';
 import { MongoClient, Db } from 'mongodb';
@@ -33,8 +34,14 @@ if (CONFIG.EXPECTED_TELEMETRY_AUTH) {
     metricsPath: `/v${CONFIG.REV}/metrics`,
     collectDefaultMetrics: true,
     authenticate: req => req.headers.authorization === `Basic ${CONFIG.EXPECTED_TELEMETRY_AUTH}`
-  }))
+  }));
 }
+
+const requests = new promclient.Counter({
+  name: 'metric_request_data',
+  help: 'Requests data',
+  labelNames: ['country', 'org', 'articleId', 'path']
+});
 
 if (!fs.existsSync('media.json')) {
   throw new Error('Media.json could not be found in the server directory.');
@@ -92,6 +99,7 @@ app.get(`/v${CONFIG.REV}/country/:int/org`, function(req, res) {
       lookat: `/v${CONFIG.REV}/country`
     })
   } else {
+    requests.inc({country: artint, path: req.path});
     res.json(mediaConfig.feeds[artint].map(org => org.name));
   }
 });
@@ -120,6 +128,7 @@ app.get(`/v${CONFIG.REV}/country/:int/org/:org`, function(req, res) {
         lookat: `/v${CONFIG.REV}/country/${artint}/org`
       });
     } else {
+      requests.inc({country: artint, org: org.name, path: req.path});
       res.json(org);
     }
   }
@@ -158,6 +167,7 @@ app.get(`/v${CONFIG.REV}/country/:int/org/:org/article`, async (req, res) => {
       return;
     }
 
+    requests.inc({country: artint, org: artorg, path: req.path});
     res.json(articles);
   } catch (e) {
     res.status(500).json({
@@ -194,6 +204,7 @@ app.get(`/v${CONFIG.REV}/country/:int/org/:org/article/:id`, function(req, res) 
       return;
     }
 
+    requests.inc({country: artint, org: artorg, articleId: artid, path: req.path});
     res.json(article);
   });
 });
