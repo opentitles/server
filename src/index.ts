@@ -33,13 +33,14 @@ if (CONFIG.EXPECTED_TELEMETRY_AUTH) {
   app.use(prometheus({
     metricsPath: `/v${CONFIG.REV}/metrics`,
     collectDefaultMetrics: true,
+    prefix: 'opentitles_',
     authenticate: req => req.headers.authorization === `Basic ${CONFIG.EXPECTED_TELEMETRY_AUTH}`
   }));
 }
 
 const requests = new promclient.Counter({
-  name: 'metric_request_data',
-  help: 'Requests data',
+  name: 'opentitles_request_data',
+  help: 'The country, organization, articleID and path for each request where it is applicable.',
   labelNames: ['country', 'org', 'articleId', 'path']
 });
 
