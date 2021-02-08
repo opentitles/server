@@ -14,7 +14,7 @@
   "dependencies": {
     "@fdebijl/clog": "1.74.0",
     "@sentry/node": "6.1.0",
-    "@sentry/tracing": "5.30.0",
+    "@sentry/tracing": "6.1.0",
     "@types/moment": "2.13.0",
     "cors": "2.8.5",
     "dotenv": "8.2.0",
