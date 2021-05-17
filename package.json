@@ -17,7 +17,7 @@
     "@sentry/tracing": "6.4.0",
     "@types/moment": "2.13.0",
     "cors": "2.8.5",
-    "dotenv": "8.6.0",
+    "dotenv": "9.0.2",
     "express": "4.17.1",
     "express-prometheus-middleware": "1.2.0",
     "moment": "2.29.1",
