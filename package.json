@@ -13,8 +13,8 @@
   "license": "AGPL-3.0",
   "dependencies": {
     "@fdebijl/clog": "1.93.0",
-    "@sentry/node": "6.7.1",
-    "@sentry/tracing": "6.7.1",
+    "@sentry/node": "6.7.2",
+    "@sentry/tracing": "6.7.2",
     "@types/moment": "2.13.0",
     "cors": "2.8.5",
     "dotenv": "8.6.0",
