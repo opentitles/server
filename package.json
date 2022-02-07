@@ -29,8 +29,8 @@
     "@types/express": "4.17.13",
     "@types/express-prometheus-middleware": "1.2.1",
     "@types/mongodb": "3.6.20",
-    "@typescript-eslint/eslint-plugin": "5.10.1",
-    "@typescript-eslint/parser": "5.10.1",
+    "@typescript-eslint/eslint-plugin": "5.10.2",
+    "@typescript-eslint/parser": "5.10.2",
     "eslint": "8.8.0",
     "typescript": "4.5.5"
   }
