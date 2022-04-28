@@ -6,7 +6,7 @@ import fs from 'fs';
 import cors from 'cors';
 import { MongoClient, Db } from 'mongodb';
 import * as Sentry from '@sentry/node';
-import * as Tracing from "@sentry/tracing";
+import * as Tracing from '@sentry/tracing';
 import { Clog, LOGLEVEL } from '@fdebijl/clog';
 
 import * as CONFIG from './config';
@@ -50,30 +50,16 @@ if (!fs.existsSync('media.json')) {
 
 let dbo: Db;
 
-const init = (): Promise<void> => {
-  return new Promise((resolve, reject) => {
-    if (!CONFIG.MONGO_URL) {
-      reject('MONGO_URL was not defined');
-      return;
-    }
+const init = async (): Promise<void> => {
+  if (!CONFIG.MONGO_URL) {
+    throw new Error('MONGO_URL was not defined');
+  }
 
-    /**
-     * Connect once and use the dbo reference in every call from here on out
-     */
-    MongoClient.connect(CONFIG.MONGO_URL, {
-      appname: 'OpenTitles API',
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      connectTimeoutMS: 5000,
-    }, function(err, database) {
-      if (err) {
-        reject(err);
-      }
-
-      dbo = database.db('opentitles');
-      resolve();
-    });
-  });
+  /**
+   * Connect once and use the dbo reference in every call from here on out
+   */
+  const database = await MongoClient.connect(CONFIG.MONGO_URL, { appName: 'OpenTitles API' });
+  dbo = database.db('opentitles');
 }
 
 /**
@@ -121,7 +107,7 @@ app.get(`/v${CONFIG.REV}/country/:int/org/:org`, function(req, res) {
       lookat: `/v${CONFIG.REV}/country`
     })
   } else {
-    const org = mediaConfig.feeds[artint].find(org => org.name == artorg);
+    const org = mediaConfig.feeds[artint].find(feedorg => feedorg.name == artorg);
 
     if (!org) {
       res.status(404).json({
@@ -152,7 +138,7 @@ app.get(`/v${CONFIG.REV}/country/:int/org/:org/article`, async (req, res) => {
   }
 
   try {
-    const articles = await dbo.collection('articles').find(find).sort({_id: -1}).limit(20).toArray();
+    const articles = await dbo.collection('articles').find(find).sort({_id: -1}).limit(200).toArray();
 
     if (!articles) {
       res.status(404).json({
