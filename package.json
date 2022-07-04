@@ -12,7 +12,7 @@
   "author": "Floris de Bijl",
   "license": "AGPL-3.0",
   "dependencies": {
-    "@fdebijl/clog": "1.131.0",
+    "@fdebijl/clog": "1.132.0",
     "@sentry/node": "6.19.7",
     "@sentry/tracing": "6.19.7",
     "@types/moment": "2.13.0",
