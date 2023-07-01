@@ -12,16 +12,16 @@
   "author": "Floris de Bijl",
   "license": "AGPL-3.0",
   "dependencies": {
-    "@fdebijl/clog": "1.152.0",
+    "@fdebijl/clog": "1.153.0",
     "@sentry/node": "6.19.7",
     "@sentry/tracing": "6.19.7",
     "@types/moment": "2.13.0",
     "cors": "2.8.5",
-    "dotenv": "16.0.3",
+    "dotenv": "16.1.4",
     "express": "4.18.2",
     "express-prometheus-middleware": "1.2.0",
     "moment": "2.29.4",
-    "mongodb": "4.15.0",
+    "mongodb": "4.16.0",
     "prom-client": "13.2.0"
   },
   "devDependencies": {
