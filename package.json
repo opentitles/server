@@ -21,7 +21,7 @@
     "express": "4.18.2",
     "express-prometheus-middleware": "1.2.0",
     "moment": "2.29.4",
-    "mongodb": "4.17.0",
+    "mongodb": "4.17.2",
     "prom-client": "13.2.0"
   },
   "devDependencies": {
